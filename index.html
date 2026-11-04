@@ -19,20 +19,22 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 16px; line-height: 1.5; }
     .container { max-width: 640px; margin: 0 auto; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; text-align: center; }
-    p.sub { font-size: 0.875rem; color: var(--text-muted); text-align: center; margin-bottom: 20px; }
-    .form-group { margin-bottom: 20px; }
+    h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; text-align: center; }
+    p.sub { font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 20px; }
+    
+    .form-group { margin-bottom: 16px; }
     label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
     input[type="number"], input[type="file"] {
       width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;
     }
-    .preview-box { text-align: center; margin: 12px 0; }
-    .preview-box img { max-width: 100%; max-height: 240px; border-radius: 6px; border: 1px solid var(--border); display: none; margin: 0 auto; }
+    .file-note { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+    .preview-box { text-align: center; margin: 8px 0; }
+    .preview-box img { max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid var(--border); display: none; margin: 0 auto; }
     
     /* 採点サマリー */
     .score-banner {
       background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px;
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: sticky; top: 10px; z-index: 10;
     }
     .score-banner span { font-weight: 600; font-size: 0.95rem; }
     .score-value { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
@@ -40,18 +42,19 @@
     /* 解答確認グリッド */
     .table-container { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
     table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th { background: #f1f5f9; padding: 10px; font-weight: 600; text-align: center; border-bottom: 1px solid var(--border); }
-    td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    .q-info { text-align: center; font-weight: 600; width: 70px; }
-    .point-tag { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; }
+    th { background: #f1f5f9; padding: 10px 8px; font-weight: 600; text-align: center; border-bottom: 1px solid var(--border); }
+    td { padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .q-info { text-align: center; font-weight: 600; width: 85px; }
+    .point-tag { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; display: block; }
     .options { display: flex; gap: 6px; justify-content: center; }
     .opt-btn {
-      width: 34px; height: 34px; border: 1px solid var(--border); background: #ffffff;
-      border-radius: 50%; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      width: 36px; height: 36px; border: 1px solid var(--border); background: #ffffff;
+      border-radius: 50%; font-size: 0.9rem; font-weight: 600; cursor: pointer;
       display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;
+      touch-action: manipulation;
     }
     .opt-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
-    .result-badge { width: 40px; text-align: center; font-weight: 700; }
+    .result-badge { width: 40px; text-align: center; font-weight: 700; font-size: 1.1rem; }
     .is-correct { color: var(--correct); }
     .is-wrong { color: var(--wrong); }
 
@@ -61,7 +64,7 @@
       border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
     }
     .submit-btn:disabled { background: #94a3b8; cursor: not-allowed; }
-    .status-msg { margin-top: 12px; font-size: 0.875rem; text-align: center; font-weight: 600; }
+    .status-msg { margin-top: 14px; font-size: 0.9rem; text-align: center; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -71,20 +74,21 @@
   <p class="sub">センター試験 1994本試 現代文（全18問・100点満点）</p>
 
   <div class="form-group">
-    <label for="studentNo">出席番号（半角数字）</label>
+    <label for="studentNo">出席番号（半角数字） <span style="color:var(--wrong);">*</span></label>
     <input type="number" id="studentNo" placeholder="例: 12" min="1" max="99" required>
   </div>
 
   <div class="form-group">
-    <label for="sheetImage">マークシート画像の読み取り</label>
+    <label for="sheetImage">マークシート画像（撮影または選択 / 任意）</label>
     <input type="file" id="sheetImage" accept="image/*" capture="environment">
+    <p class="file-note">※画像を読み込まなくても下の表を直接タップして解答できます。</p>
     <div class="preview-box">
       <img id="imgPreview" alt="アップロードプレビュー">
     </div>
   </div>
 
   <div class="score-banner">
-    <span>現在の自己採点合計:</span>
+    <span>自己採点合計:</span>
     <div><span class="score-value" id="currentScore">0</span> / 100 点</div>
   </div>
 
@@ -92,9 +96,9 @@
     <table>
       <thead>
         <tr>
-          <th>設問 (配点)</th>
-          <th>選択マーク (①〜⑤)</th>
-          <th>正否</th>
+          <th>設問</th>
+          <th>マーク選択 (①〜⑤)</th>
+          <th>判定</th>
         </tr>
       </thead>
       <tbody id="questionRows"></tbody>
@@ -106,7 +110,7 @@
 </div>
 
 <script>
-  // スプレッドシートから読み込んだ配点・模範解答データ
+  // スプレッドシートの配点・模範解答データ
   const QUESTION_DATA = [
     { no: 1,  ans: 3, score: 2 },
     { no: 2,  ans: 4, score: 2 },
@@ -128,21 +132,18 @@
     { no: 18, ans: 3, score: 8 }
   ];
 
-  // 生徒の選択状態を保持（問番号: 選択値）
   const userAnswers = {};
 
-  // テーブルの生成
+  // ページ読み込み時にテーブルを即時描画
   const tbody = document.getElementById('questionRows');
   QUESTION_DATA.forEach(q => {
     const tr = document.createElement('tr');
     
-    // 設問番号 & 配点
     const tdInfo = document.createElement('td');
     tdInfo.className = 'q-info';
-    tdInfo.innerHTML = `問${q.no} <span class="point-tag">(${q.score}点)</span>`;
+    tdInfo.innerHTML = `問${q.no} <span class="point-tag">${q.score}点</span>`;
     tr.appendChild(tdInfo);
 
-    // 選択肢 (1〜5)
     const tdOpts = document.createElement('td');
     const optsDiv = document.createElement('div');
     optsDiv.className = 'options';
@@ -161,7 +162,6 @@
     tdOpts.appendChild(optsDiv);
     tr.appendChild(tdOpts);
 
-    // 正否バッジ
     const tdRes = document.createElement('td');
     tdRes.className = 'result-badge';
     tdRes.id = `result-${q.no}`;
@@ -171,11 +171,9 @@
     tbody.appendChild(tr);
   });
 
-  // 選択肢の変更・再計算処理
   function selectChoice(questionNo, choiceVal) {
     userAnswers[questionNo] = choiceVal;
 
-    // ボタンのアクティブ更新
     const rowBtns = document.querySelectorAll(`button[data-question="${questionNo}"]`);
     rowBtns.forEach(btn => {
       if (parseInt(btn.dataset.val) === choiceVal) {
@@ -188,7 +186,6 @@
     calculateScore();
   }
 
-  // 採点計算
   function calculateScore() {
     let total = 0;
     QUESTION_DATA.forEach(q => {
@@ -211,26 +208,24 @@
     document.getElementById('currentScore').textContent = total;
   }
 
-  // 画像アップロード時のプレビュー＆自動判定処理枠
+  // 画像選択時のプレビュー
   document.getElementById('sheetImage').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
-
     const img = document.getElementById('imgPreview');
     img.src = URL.createObjectURL(file);
     img.style.display = 'block';
-
-    // 注: 完全クライアントサイドでの高精度マークシートOCRは撮影歪みに影響されやすいため、
-    // ここでは初期枠としてプレビューを表示し、生徒が上の表をワンタップで確認・修正できるようにしています。
   });
 
-  // 送信処理（Google Apps ScriptのエンドポイントまたはWebHookにPOST）
-  // 以下のURLをデプロイしたGoogle Apps ScriptのWebアプリURLに差し替えてください。
+  // ==========================================
+  // ここにデプロイしたWebアプリURLを貼り付けます
+  // ==========================================
   const GAS_ENDPOINT_URL = https://script.google.com/macros/s/AKfycbznhvWGu-pFm6gYsTpuq_llVwsEvSwhj4PCt-XAv_hhSqLehUG0ZCFtyoxCROIMhacP/exec;
 
   document.getElementById('submitBtn').addEventListener('click', async () => {
     const studentNo = document.getElementById('studentNo').value;
     const statusMsg = document.getElementById('statusMsg');
+    const submitBtn = document.getElementById('submitBtn');
 
     if (!studentNo) {
       alert('出席番号を入力してください。');
@@ -245,31 +240,31 @@
       timestamp: new Date().toISOString()
     };
 
-    statusMsg.style.color = '#2563eb';
-    statusMsg.textContent = '送信中...';
-
-    // GASエンドポイントが未設定の場合はローカルダウンロード/確認モードとして動作
-    if (GAS_ENDPOINT_URL === "YOUR_GAS_WEBAPP_URL_HERE") {
-      setTimeout(() => {
-        statusMsg.style.color = '#16a34a';
-        statusMsg.textContent = `【テスト完了】番号 ${studentNo} 番: ${currentScore}点 で記録しました（※本番送信にはGAS URLの設定が必要です）。`;
-        console.log("送信ペイロード:", payload);
-      }, 500);
+    if (GAS_ENDPOINT_URL === "YOUR_GAS_WEBAPP_URL_HERE" || !GAS_ENDPOINT_URL.startsWith("https://script.google.com")) {
+      alert("GASのデプロイURLが設定されていません。コード内の GAS_ENDPOINT_URL を書き換えてください。");
       return;
     }
 
+    submitBtn.disabled = true;
+    statusMsg.style.color = '#2563eb';
+    statusMsg.textContent = '送信中...';
+
     try {
+      // CORSエラーを回避するため text/plain 形式でJSON文字列を送信
       await fetch(GAS_ENDPOINT_URL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'text/plain'
+        },
         body: JSON.stringify(payload)
       });
+
       statusMsg.style.color = '#16a34a';
       statusMsg.textContent = `出席番号 ${studentNo} 番の結果（${currentScore}点）を送信完了しました。`;
     } catch (err) {
       statusMsg.style.color = '#dc2626';
-      statusMsg.textContent = '送信に失敗しました。時間をおいて再試行してください。';
+      statusMsg.textContent = '送信に失敗しました。GASのアクセス権限（全員になっているか）をご確認ください。';
+      submitBtn.disabled = false;
     }
   });
 </script>
