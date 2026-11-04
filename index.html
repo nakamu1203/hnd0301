@@ -240,7 +240,7 @@
       timestamp: new Date().toISOString()
     };
 
-    if (GAS_ENDPOINT_URL === "YOUR_GAS_WEBAPP_URL_HERE" || !GAS_ENDPOINT_URL.startsWith("https://script.google.com")) {
+    if (GAS_ENDPOINT_URL === "https://script.google.com/macros/s/AKfycbznhvWGu-pFm6gYsTpuq_llVwsEvSwhj4PCt-XAv_hhSqLehUG0ZCFtyoxCROIMhacP/exec" || !GAS_ENDPOINT_URL.startsWith("https://script.google.com")) {
       alert("GASのデプロイURLが設定されていません。コード内の GAS_ENDPOINT_URL を書き換えてください。");
       return;
     }
