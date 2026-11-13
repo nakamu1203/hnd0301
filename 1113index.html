@@ -75,24 +75,31 @@
 
     /* 問十七 スライド並び替え */
     .sort-hint { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; }
+    .sort-status {
+      font-size: 0.8rem; font-weight: 700; color: var(--primary);
+      background: var(--primary-light); padding: 4px 10px; border-radius: 4px;
+      margin-bottom: 8px; text-align: center;
+    }
     .sort-list {
-      display: flex; gap: 6px; justify-content: space-between; user-select: none; touch-action: pan-y;
+      display: flex; gap: 6px; justify-content: space-between; user-select: none;
     }
     .sort-item {
       flex: 1; background: var(--opt-bg); border: 2px solid var(--border); border-radius: 8px;
-      padding: 10px 4px; text-align: center; font-weight: 700; font-size: 1rem; cursor: grab;
-      display: flex; flex-direction: column; align-items: center; gap: 4px; transition: transform 0.1s, background 0.15s;
+      padding: 10px 4px; text-align: center; font-weight: 700; font-size: 1.05rem; cursor: grab;
+      display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform 0.12s, background 0.15s, border-color 0.15s;
+      touch-action: none;
     }
-    .sort-item.dragging { opacity: 0.5; background: #dbeafe; border-color: var(--primary); }
-    .sort-arrows { display: flex; gap: 4px; margin-top: 2px; }
+    .sort-item.active-drag {
+      background: #dbeafe; border-color: var(--primary); transform: scale(1.06); z-index: 5;
+    }
+    .sort-pos { font-size: 0.65rem; color: var(--text-muted); font-weight: normal; }
+    .sort-arrows { display: flex; gap: 4px; }
     .arrow-btn {
       background: #fff; border: 1px solid var(--border); border-radius: 4px;
-      width: 22px; height: 22px; font-size: 0.7rem; cursor: pointer; color: var(--text);
+      width: 24px; height: 24px; font-size: 0.7rem; cursor: pointer; color: var(--text);
       display: flex; align-items: center; justify-content: center;
     }
     .arrow-btn:active { background: var(--primary); color: #fff; }
-
-    .input-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
 
     /* 送信ボタン */
     .submit-btn {
@@ -188,10 +195,10 @@
     },
     {
       id: "15", title: "問十五", type: "pair5", section: "req", maxScore: 4,
-      note: "３・４（５）をそれぞれ選択（各2点）",
+      note: "３・５をそれぞれ選択（各2点）",
       subs: [
         { key: "3", label: "３", ans: "ウ", score: 2 },
-        { key: "4", label: "４", ans: "ア", score: 2 }
+        { key: "5", label: "５", ans: "ア", score: 2 }
       ]
     },
     {
