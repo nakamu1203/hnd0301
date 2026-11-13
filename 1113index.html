@@ -294,20 +294,30 @@
       } else if (q.type === "sort") {
         var hint = document.createElement("div");
         hint.className = "sort-hint";
-        hint.textContent = "カードを左右にドラッグ、または ◀ ▶ ボタンで順番を入れ替えてください。";
+        hint.textContent = "カードを左右にスライド（ドラッグ）、または ◀ ▶ で順番を入れ替えてください。";
         card.appendChild(hint);
+
+        var statusBar = document.createElement("div");
+        statusBar.className = "sort-status";
+        statusBar.id = "sortStatus";
+        statusBar.textContent = "現在の並び: ア → イ → ウ → エ → オ";
+        card.appendChild(statusBar);
 
         var list = document.createElement("div");
         list.className = "sort-list";
         list.id = "sortList";
         card.appendChild(list);
-        renderSortItems();
       }
 
+      // 先にDOMへ追加してから中身の選択肢を描画
       if (q.section === "req") {
         reqContainer.appendChild(card);
       } else {
         optContainer.appendChild(card);
+      }
+
+      if (q.type === "sort") {
+        renderSortItems();
       }
     });
   }
@@ -344,19 +354,26 @@
     return row;
   }
 
-  // 問十七 スライド＆ボタン並び替え描画
-  var dragSrcIndex = null;
-
+  // 問十七 スライド（ポインタードラッグ）＆矢印並び替え描画
   function renderSortItems() {
     var list = document.getElementById("sortList");
+    var statusBar = document.getElementById("sortStatus");
     if (!list) return;
     list.innerHTML = "";
+
+    if (statusBar) {
+      statusBar.textContent = "現在の並び: " + sortOrder.join(" → ");
+    }
 
     sortOrder.forEach(function(char, idx) {
       var item = document.createElement("div");
       item.className = "sort-item";
-      item.draggable = true;
       item.setAttribute("data-index", idx);
+
+      var posSpan = document.createElement("span");
+      posSpan.className = "sort-pos";
+      posSpan.textContent = (idx + 1) + "番目";
+      item.appendChild(posSpan);
 
       var textSpan = document.createElement("span");
       textSpan.textContent = char;
@@ -370,10 +387,11 @@
         leftBtn.type = "button";
         leftBtn.className = "arrow-btn";
         leftBtn.textContent = "◀";
-        leftBtn.onclick = function(e) {
+        leftBtn.addEventListener("pointerdown", function(e) { e.stopPropagation(); });
+        leftBtn.addEventListener("click", function(e) {
           e.stopPropagation();
           swapSort(idx, idx - 1);
-        };
+        });
         arrows.appendChild(leftBtn);
       }
       if (idx < sortOrder.length - 1) {
@@ -381,44 +399,46 @@
         rightBtn.type = "button";
         rightBtn.className = "arrow-btn";
         rightBtn.textContent = "▶";
-        rightBtn.onclick = function(e) {
+        rightBtn.addEventListener("pointerdown", function(e) { e.stopPropagation(); });
+        rightBtn.addEventListener("click", function(e) {
           e.stopPropagation();
           swapSort(idx, idx + 1);
-        };
+        });
         arrows.appendChild(rightBtn);
       }
       item.appendChild(arrows);
 
-      // PC/ブラウザ標準ドラッグ＆ドロップ
-      item.addEventListener("dragstart", function() {
-        dragSrcIndex = idx;
-        item.classList.add("dragging");
+      // スマホ・PC両対応のスライド（ポインター移動）並び替え
+      var startX = 0;
+      var dragging = false;
+
+      item.addEventListener("pointerdown", function(e) {
+        startX = e.clientX;
+        dragging = true;
+        item.classList.add("active-drag");
+        item.setPointerCapture(e.pointerId);
       });
-      item.addEventListener("dragend", function() {
-        item.classList.remove("dragging");
-      });
-      item.addEventListener("dragover", function(e) {
-        e.preventDefault();
-      });
-      item.addEventListener("drop", function(e) {
-        e.preventDefault();
-        if (dragSrcIndex !== null && dragSrcIndex !== idx) {
-          swapSort(dragSrcIndex, idx);
+
+      item.addEventListener("pointermove", function(e) {
+        if (!dragging) return;
+        var diffX = e.clientX - startX;
+        var cardWidth = item.offsetWidth || 50;
+        if (diffX > cardWidth * 0.6 && idx < sortOrder.length - 1) {
+          dragging = false;
+          swapSort(idx, idx + 1);
+        } else if (diffX < -cardWidth * 0.6 && idx > 0) {
+          dragging = false;
+          swapSort(idx, idx - 1);
         }
       });
 
-      // スマホ用タッチスライド入れ替え
-      var touchStartX = 0;
-      item.addEventListener("touchstart", function(e) {
-        touchStartX = e.touches[0].clientX;
-      }, { passive: true });
-      item.addEventListener("touchend", function(e) {
-        var diffX = e.changedTouches[0].clientX - touchStartX;
-        if (diffX > 25 && idx < sortOrder.length - 1) {
-          swapSort(idx, idx + 1);
-        } else if (diffX < -25 && idx > 0) {
-          swapSort(idx, idx - 1);
-        }
+      item.addEventListener("pointerup", function() {
+        dragging = false;
+        item.classList.remove("active-drag");
+      });
+      item.addEventListener("pointercancel", function() {
+        dragging = false;
+        item.classList.remove("active-drag");
       });
 
       list.appendChild(item);
