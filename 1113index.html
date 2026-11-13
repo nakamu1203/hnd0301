@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>国語 解答確認・送信フォーム（問十一〜二十四）</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-light: #eff6ff;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #cbd5e1;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --correct: #16a34a;
+      --wrong: #dc2626;
+      --opt-bg: #f1f5f9;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 12px; line-height: 1.5; }
+    .container { max-width: 640px; margin: 0 auto; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; text-align: center; }
+    p.sub { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 16px; }
+
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem; }
+    input[type="number"], input[type="text"] {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; background: #fff;
+    }
+    input[type="text"]:focus, input[type="number"]:focus {
+      outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+    }
+
+    /* 採点サマリー（画面上部に追従） */
+    .score-banner {
+      background: var(--primary-light); border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px;
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: sticky; top: 8px; z-index: 20;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .score-detail { font-size: 0.8rem; color: var(--text); }
+    .score-detail strong { color: var(--primary); font-size: 0.95rem; }
+    .score-total { font-size: 1.35rem; font-weight: 800; color: var(--primary); }
+
+    /* 問題カード */
+    .section-divider {
+      background: #e2e8f0; color: #334155; font-weight: 700; font-size: 0.85rem;
+      padding: 6px 12px; border-radius: 6px; margin: 20px 0 12px; text-align: center;
+    }
+    .q-card {
+      border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: #fff;
+    }
+    .q-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+      border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;
+    }
+    .q-title { font-weight: 700; font-size: 0.95rem; }
+    .q-meta { font-size: 0.75rem; color: var(--text-muted); margin-left: 6px; font-weight: normal; }
+    .q-judge { font-weight: 800; font-size: 1rem; min-width: 48px; text-align: right; }
+    .is-correct { color: var(--correct); }
+    .is-wrong { color: var(--wrong); }
+
+    /* 5択ボタン */
+    .sub-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+    .sub-row:last-child { margin-bottom: 0; }
+    .sub-label { font-weight: 700; font-size: 0.85rem; min-width: 36px; color: var(--text); }
+    .options { display: flex; gap: 6px; flex: 1; justify-content: flex-end; }
+    .opt-btn {
+      flex: 1; max-width: 46px; height: 38px; border: 1px solid var(--border); background: #fff;
+      border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.1s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .opt-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* 問十七 スライド並び替え */
+    .sort-hint { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; }
+    .sort-list {
+      display: flex; gap: 6px; justify-content: space-between; user-select: none; touch-action: pan-y;
+    }
+    .sort-item {
+      flex: 1; background: var(--opt-bg); border: 2px solid var(--border); border-radius: 8px;
+      padding: 10px 4px; text-align: center; font-weight: 700; font-size: 1rem; cursor: grab;
+      display: flex; flex-direction: column; align-items: center; gap: 4px; transition: transform 0.1s, background 0.15s;
+    }
+    .sort-item.dragging { opacity: 0.5; background: #dbeafe; border-color: var(--primary); }
+    .sort-arrows { display: flex; gap: 4px; margin-top: 2px; }
+    .arrow-btn {
+      background: #fff; border: 1px solid var(--border); border-radius: 4px;
+      width: 22px; height: 22px; font-size: 0.7rem; cursor: pointer; color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .arrow-btn:active { background: var(--primary); color: #fff; }
+
+    .input-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* 送信ボタン */
+    .submit-btn {
+      width: 100%; background: var(--primary); color: #fff; border: none; padding: 14px;
+      border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 8px;
+    }
+    .submit-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+    .status-msg { margin-top: 12px; font-size: 0.85rem; text-align: center; font-weight: 600; min-height: 1.5em; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>解答確認・自己採点フォーム</h1>
+  <p class="sub">問十一〜問二十四（必須30点 ＋ 任意20点 ＝ 50点満点）</p>
+
+  <div class="form-group">
+    <label for="studentNo">出席番号（半角数字） <span style="color:var(--wrong);">*</span></label>
+    <input type="number" id="studentNo" placeholder="例: 12" min="1" max="99" required inputmode="numeric">
+  </div>
+
+  <div class="score-banner">
+    <div class="score-detail">
+      必須(〜問十九): <strong id="baseScore">0</strong>/30点<br>
+      任意(問二十〜): <strong id="optScore">0</strong>/20点
+    </div>
+    <div>合計 <span class="score-total" id="totalScore">0</span> / 50点</div>
+  </div>
+
+  <!-- 必須問題エリア -->
+  <div id="requiredQuestions"></div>
+
+  <!-- 任意問題エリア -->
+  <div class="section-divider">▼ ここからは任意問題（各4点・計20点） ▼</div>
+  <div id="optionalQuestions"></div>
+
+  <button class="submit-btn" id="submitBtn">この内容で結果を送信する</button>
+  <div class="status-msg" id="statusMsg"></div>
+</div>
+
+<script>
+  // ==========================================
+  // ここにGASの公開URLを貼り付けてください
+  // ==========================================
+  var GAS_ENDPOINT_URL = "YOUR_GAS_WEBAPP_URL_HERE";
+
+  // 谷崎潤一郎の作品名ホワイトリスト（表記ゆれ・主要作品網羅）
+  var TANIZAKI_WORKS = [
+    "刺青", "しせい", "麒麟", "きりん", "少年", "しょうねん", "秘密", "ひみつ",
+    "悪魔", "あくま", "お艶殺し", "おつやごろし", "痴人の愛", "ちじんのあい",
+    "蓼喰う虫", "蓼食う虫", "たでくうむし", "卍", "まんじ",
+    "吉野葛", "よしのくず", "盲目物語", "もうもくものがたり",
+    "蘆刈", "芦刈", "あしかり", "春琴抄", "しゅんきんしょう",
+    "陰翳礼讃", "陰影礼賛", "いんえいらいさん", "武州公秘話", "ぶしゅうこうひわ",
+    "猫と庄造と二人のをんな", "猫と庄造と二人の女", "ねことしょうぞうとふたりのをんな",
+    "細雪", "ささめゆき", "少将滋幹の母", "しょうしょうしげもとのはは",
+    "鍵", "かぎ", "幼少時代", "ようしょうじだい", "夢の浮橋", "ゆめのうきはし",
+    "瘋癲老人日記", "瘋癲老人", "ふうてんろうじんにっき", "台所太平記", "だいどころたいへいき",
+    "小さな王国", "ちいさなおうこく", "母を恋ふる記", "母を恋うる記", "ははをこふるき",
+    "富美子の足", "ふみこのあし", "人魚の嘆き", "にんぎょのなげき",
+    "異端者の悲しみ", "いたんしゃのかなしみ", "金と銀", "きんとぎん",
+    "アヴェ・マリア", "アヴェマリア", "青い花", "あおいはな", "乱菊物語", "らんぎくものがたり",
+    "文章読本", "ぶんしょうどくほん"
+  ];
+
+  // 設問定義（問十一〜十九: 30点、問二十〜二十四: 20点）
+  var QUESTIONS = [
+    {
+      id: "11", title: "問十一", type: "pair5", section: "req", maxScore: 4,
+      note: "1・2をそれぞれ選択（各2点）",
+      subs: [
+        { key: "1", label: "１", ans: "オ", score: 2 },
+        { key: "2", label: "２", ans: "イ", score: 2 }
+      ]
+    },
+    {
+      id: "12", title: "問十二", type: "text", section: "req", maxScore: 3,
+      note: "空欄Ａの漢字二字", placeholder: "漢字二字で入力",
+      answers: ["都市", "都会"]
+    },
+    {
+      id: "13", title: "問十三", type: "text", section: "req", maxScore: 3,
+      note: "空欄Ｂの漢字二字", placeholder: "漢字二字で入力",
+      answers: ["神仙"]
+    },
+    {
+      id: "14", title: "問十四", type: "pair5", section: "req", maxScore: 4,
+      note: "Ｃ・Ｅをそれぞれ選択（各2点）",
+      subs: [
+        { key: "C", label: "Ｃ", ans: "オ", score: 2 },
+        { key: "E", label: "Ｅ", ans: "イ", score: 2 }
+      ]
+    },
+    {
+      id: "15", title: "問十五", type: "pair5", section: "req", maxScore: 4,
+      note: "３・４（５）をそれぞれ選択（各2点）",
+      subs: [
+        { key: "3", label: "３", ans: "ウ", score: 2 },
+        { key: "4", label: "４", ans: "ア", score: 2 }
+      ]
+    },
+    {
+      id: "16", title: "問十六", type: "single5", section: "req", maxScore: 3,
+      note: "ア〜オの5択", ans: "ウ"
+    },
+    {
+      id: "17", title: "問十七", type: "sort", section: "req", maxScore: 3,
+      note: "スライドまたは矢印で並び替え（完全一致）",
+      items: ["ア", "イ", "ウ", "エ", "オ"],
+      ans: "イエウアオ"
+    },
+    {
+      id: "18", title: "問十八", type: "single5", section: "req", maxScore: 3,
+      note: "ア〜オの5択", ans: "ウ"
+    },
+    {
+      id: "19", title: "問十九", type: "tanizaki", section: "req", maxScore: 3,
+      note: "作品名を入力（谷崎潤一郎の作品）", placeholder: "例: 細雪、春琴抄、陰翳礼讃 など"
+    },
+    // --- 任意問題（計20点） ---
+    {
+      id: "20", title: "問二十", type: "single5", section: "opt", maxScore: 4,
+      note: "ア〜オの5択", ans: "ア"
+    },
+    {
+      id: "21", title: "問二十一", type: "single5", section: "opt", maxScore: 4,
+      note: "ア〜オの5択", ans: "エ"
+    },
+    {
+      id: "22", title: "問二十二", type: "single5", section: "opt", maxScore: 4,
+      note: "ア〜オの5択", ans: "オ"
+    },
+    {
+      id: "23", title: "問二十三", type: "text", section: "opt", maxScore: 4,
+      note: "ひらがなで入力", placeholder: "ひらがなで入力",
+      answers: ["さんぽうより", "やまのみねより"]
+    },
+    {
+      id: "24", title: "問二十四", type: "single5", section: "opt", maxScore: 4,
+      note: "ア〜オの5択", ans: "ア"
+    }
+  ];
+
+  // 解答保持オブジェクト
+  var state = {};
+  var sortOrder = ["ア", "イ", "ウ", "エ", "オ"];
+  var sortTouched = false;
+
+  document.addEventListener("DOMContentLoaded", function() {
+    renderAll();
+  });
+
+  function renderAll() {
+    var reqContainer = document.getElementById("requiredQuestions");
+    var optContainer = document.getElementById("optionalQuestions");
+    reqContainer.innerHTML = "";
+    optContainer.innerHTML = "";
+
+    QUESTIONS.forEach(function(q) {
+      var card = document.createElement("div");
+      card.className = "q-card";
+
+      var header = document.createElement("div");
+      header.className = "q-header";
+      header.innerHTML =
+        '<div><span class="q-title">' + q.title + '</span><span class="q-meta">(' + q.maxScore + '点 / ' + q.note + ')</span></div>' +
+        '<div class="q-judge" id="judge-' + q.id + '">-</div>';
+      card.appendChild(header);
+
+      if (q.type === "single5") {
+        card.appendChild(createChoiceRow(q.id, "選択", function(val) {
+          state[q.id] = val;
+          updateScores();
+        }));
+      } else if (q.type === "pair5") {
+        state[q.id] = {};
+        q.subs.forEach(function(sub) {
+          card.appendChild(createChoiceRow(q.id + "-" + sub.key, sub.label, function(val) {
+            state[q.id][sub.key] = val;
+            updateScores();
+          }));
+        });
+      } else if (q.type === "text" || q.type === "tanizaki") {
+        var inp = document.createElement("input");
+        inp.type = "text";
+        inp.placeholder = q.placeholder || "";
+        inp.addEventListener("input", function() {
+          state[q.id] = inp.value;
+          updateScores();
+        });
+        card.appendChild(inp);
+      } else if (q.type === "sort") {
+        var hint = document.createElement("div");
+        hint.className = "sort-hint";
+        hint.textContent = "カードを左右にドラッグ、または ◀ ▶ ボタンで順番を入れ替えてください。";
+        card.appendChild(hint);
+
+        var list = document.createElement("div");
+        list.className = "sort-list";
+        list.id = "sortList";
+        card.appendChild(list);
+        renderSortItems();
+      }
+
+      if (q.section === "req") {
+        reqContainer.appendChild(card);
+      } else {
+        optContainer.appendChild(card);
+      }
+    });
+  }
+
+  function createChoiceRow(groupId, labelText, onSelect) {
+    var row = document.createElement("div");
+    row.className = "sub-row";
+
+    var lbl = document.createElement("div");
+    lbl.className = "sub-label";
+    lbl.textContent = labelText;
+    row.appendChild(lbl);
+
+    var opts = document.createElement("div");
+    opts.className = "options";
+    var choices = ["ア", "イ", "ウ", "エ", "オ"];
+
+    choices.forEach(function(ch) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "opt-btn";
+      btn.textContent = ch;
+      btn.setAttribute("data-group", groupId);
+      btn.addEventListener("click", function() {
+        var siblings = document.querySelectorAll('button[data-group="' + groupId + '"]');
+        for (var i = 0; i < siblings.length; i++) siblings[i].classList.remove("active");
+        btn.classList.add("active");
+        onSelect(ch);
+      });
+      opts.appendChild(btn);
+    });
+
+    row.appendChild(opts);
+    return row;
+  }
+
+  // 問十七 スライド＆ボタン並び替え描画
+  var dragSrcIndex = null;
+
+  function renderSortItems() {
+    var list = document.getElementById("sortList");
+    if (!list) return;
+    list.innerHTML = "";
+
+    sortOrder.forEach(function(char, idx) {
+      var item = document.createElement("div");
+      item.className = "sort-item";
+      item.draggable = true;
+      item.setAttribute("data-index", idx);
+
+      var textSpan = document.createElement("span");
+      textSpan.textContent = char;
+      item.appendChild(textSpan);
+
+      var arrows = document.createElement("div");
+      arrows.className = "sort-arrows";
+
+      if (idx > 0) {
+        var leftBtn = document.createElement("button");
+        leftBtn.type = "button";
+        leftBtn.className = "arrow-btn";
+        leftBtn.textContent = "◀";
+        leftBtn.onclick = function(e) {
+          e.stopPropagation();
+          swapSort(idx, idx - 1);
+        };
+        arrows.appendChild(leftBtn);
+      }
+      if (idx < sortOrder.length - 1) {
+        var rightBtn = document.createElement("button");
+        rightBtn.type = "button";
+        rightBtn.className = "arrow-btn";
+        rightBtn.textContent = "▶";
+        rightBtn.onclick = function(e) {
+          e.stopPropagation();
+          swapSort(idx, idx + 1);
+        };
+        arrows.appendChild(rightBtn);
+      }
+      item.appendChild(arrows);
+
+      // PC/ブラウザ標準ドラッグ＆ドロップ
+      item.addEventListener("dragstart", function() {
+        dragSrcIndex = idx;
+        item.classList.add("dragging");
+      });
+      item.addEventListener("dragend", function() {
+        item.classList.remove("dragging");
+      });
+      item.addEventListener("dragover", function(e) {
+        e.preventDefault();
+      });
+      item.addEventListener("drop", function(e) {
+        e.preventDefault();
+        if (dragSrcIndex !== null && dragSrcIndex !== idx) {
+          swapSort(dragSrcIndex, idx);
+        }
+      });
+
+      // スマホ用タッチスライド入れ替え
+      var touchStartX = 0;
+      item.addEventListener("touchstart", function(e) {
+        touchStartX = e.touches[0].clientX;
+      }, { passive: true });
+      item.addEventListener("touchend", function(e) {
+        var diffX = e.changedTouches[0].clientX - touchStartX;
+        if (diffX > 25 && idx < sortOrder.length - 1) {
+          swapSort(idx, idx + 1);
+        } else if (diffX < -25 && idx > 0) {
+          swapSort(idx, idx - 1);
+        }
+      });
+
+      list.appendChild(item);
+    });
+  }
+
+  function swapSort(fromIdx, toIdx) {
+    var temp = sortOrder[fromIdx];
+    sortOrder[fromIdx] = sortOrder[toIdx];
+    sortOrder[toIdx] = temp;
+    sortTouched = true;
+    state["17"] = sortOrder.join("");
+    renderSortItems();
+    updateScores();
+  }
+
+  // 文字列正規化（空白・カギ括弧除去）
+  function normalizeStr(s) {
+    if (!s) return "";
+    return s.replace(/[\s 「」『』()（）]/g, "").trim();
+  }
+
+  function updateScores() {
+    var baseTotal = 0;
+    var optTotal = 0;
+
+    QUESTIONS.forEach(function(q) {
+      var earned = 0;
+      var answered = false;
+
+      if (q.type === "single5") {
+        if (state[q.id]) {
+          answered = true;
+          if (state[q.id] === q.ans) earned = q.maxScore;
+        }
+      } else if (q.type === "pair5") {
+        var subObj = state[q.id] || {};
+        q.subs.forEach(function(sub) {
+          if (subObj[sub.key]) {
+            answered = true;
+            if (subObj[sub.key] === sub.ans) earned += sub.score;
+          }
+        });
+      } else if (q.type === "text") {
+        var val = normalizeStr(state[q.id]);
+        if (val.length > 0) {
+          answered = true;
+          if (q.answers.indexOf(val) !== -1) earned = q.maxScore;
+        }
+      } else if (q.type === "sort") {
+        if (sortTouched) {
+          answered = true;
+          if (sortOrder.join("") === q.ans) earned = q.maxScore;
+        }
+      } else if (q.type === "tanizaki") {
+        var workVal = normalizeStr(state[q.id]);
+        if (workVal.length > 0) {
+          answered = true;
+          if (TANIZAKI_WORKS.indexOf(workVal) !== -1) earned = q.maxScore;
+        }
+      }
+
+      // 判定表示更新
+      var judgeEl = document.getElementById("judge-" + q.id);
+      if (judgeEl) {
+        if (!answered) {
+          judgeEl.textContent = "-";
+          judgeEl.className = "q-judge";
+        } else if (earned === q.maxScore) {
+          judgeEl.textContent = "○ (" + earned + "点)";
+          judgeEl.className = "q-judge is-correct";
+        } else if (earned > 0) {
+          judgeEl.textContent = "△ (" + earned + "点)";
+          judgeEl.className = "q-judge is-correct";
+        } else {
+          judgeEl.textContent = "× (0点)";
+          judgeEl.className = "q-judge is-wrong";
+        }
+      }
+
+      if (q.section === "req") {
+        baseTotal += earned;
+      } else {
+        optTotal += earned;
+      }
+    });
+
+    document.getElementById("baseScore").textContent = baseTotal;
+    document.getElementById("optScore").textContent = optTotal;
+    document.getElementById("totalScore").textContent = baseTotal + optTotal;
+  }
+
+  // 送信処理
+  document.getElementById("submitBtn").addEventListener("click", function() {
+    var studentNo = document.getElementById("studentNo").value;
+    var statusMsg = document.getElementById("statusMsg");
+    var submitBtn = document.getElementById("submitBtn");
+
+    if (!studentNo) {
+      alert("出席番号を入力してください。");
+      return;
+    }
+
+    var baseScore = parseInt(document.getElementById("baseScore").textContent, 10);
+    var optScore = parseInt(document.getElementById("optScore").textContent, 10);
+    var totalScore = baseScore + optScore;
+
+    var payload = {
+      studentNo: studentNo,
+      baseScore: baseScore,
+      optScore: optScore,
+      totalScore: totalScore,
+      answers: {
+        q11: state["11"] || {},
+        q12: state["12"] || "",
+        q13: state["13"] || "",
+        q14: state["14"] || {},
+        q15: state["15"] || {},
+        q16: state["16"] || "",
+        q17: sortTouched ? sortOrder.join("") : "",
+        q18: state["18"] || "",
+        q19: state["19"] || "",
+        q20: state["20"] || "",
+        q21: state["21"] || "",
+        q22: state["22"] || "",
+        q23: state["23"] || "",
+        q24: state["24"] || ""
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    if (!GAS_ENDPOINT_URL || !GAS_ENDPOINT_URL.startsWith("https://script.google.com")) {
+      alert("GASのデプロイURLが設定されていません。コード内の GAS_ENDPOINT_URL を書き換えてください。");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    statusMsg.style.color = "#2563eb";
+    statusMsg.textContent = "送信中...";
+
+    fetch(GAS_ENDPOINT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload)
+    })
+    .then(function() {
+      statusMsg.style.color = "#16a34a";
+      statusMsg.textContent = "出席番号 " + studentNo + " 番の結果（必須:" + baseScore + "点 / 任意:" + optScore + "点 / 合計:" + totalScore + "点）を送信しました。";
+    })
+    .catch(function() {
+      statusMsg.style.color = "#dc2626";
+      statusMsg.textContent = "送信に失敗しました。時間をおいて再試行してください。";
+      submitBtn.disabled = false;
+    });
+  });
+</script>
+</body>
+</html>
